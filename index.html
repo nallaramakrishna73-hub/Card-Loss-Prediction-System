@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Card Loss Prediction System</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#000;--pn:#111;--ln:#2e2e2e;--tx:#f2f2f2;--mu:#9a9a9a;--sky:#d4d4d4;--pk:#ffffff;--lm:#bdbdbd;--rd:#ff4d4d;--am:#c9c9c9;--gn:#e6e6e6}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:500}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#0a0a0a;border-bottom:2px solid #444;flex-wrap:wrap;gap:8px}
+h1{font-size:22px;font-weight:900;margin:0;color:#fff;letter-spacing:-.01em;text-transform:uppercase}h1 small{color:var(--mu);font-weight:600;font-size:12px;margin-left:10px;text-transform:none;letter-spacing:0}
+h3{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+main{display:grid;grid-template-columns:310px minmax(0,1fr) 350px;gap:12px;padding:12px}
+@media(max-width:1100px){main{grid-template-columns:1fr}}
+.card{background:var(--pn);border:1px solid var(--ln);border-top:3px solid #777;border-radius:10px;padding:14px;margin-bottom:12px}
+label{display:block;color:var(--mu);font-size:11px;font-weight:700;margin:8px 0 3px;text-transform:uppercase;letter-spacing:.05em}
+input,select{width:100%;background:#000;color:#fff;border:1px solid #3a3a3a;border-radius:6px;padding:8px;font-weight:600}
+input:focus,select:focus{outline:0;border-color:#fff}
+button{background:#fff;color:#000;border:0;border-radius:6px;padding:9px 14px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
+button:hover{background:#d0d0d0}
+button.g{background:transparent;color:#fff;border:1px solid #777}button.g:hover{background:#222}
+button.r{background:var(--rd);color:#fff}button:disabled{opacity:.3;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{padding:6px 10px;border-left:4px solid #333;color:var(--mu);margin-bottom:3px;font-weight:700;border-radius:0 6px 6px 0}
+.steps li.on{border-color:#fff;color:#fff;background:#262626}
+.steps li.done{border-color:#888;color:#fff}
+.steps li.done::after{content:" ✓";color:#fff;font-weight:900}
+#log{max-height:120px;overflow:auto;font:11px ui-monospace,Menlo,monospace;color:#b5b5b5}
+.mapw{overflow-x:auto}svg{width:100%;height:auto;background:#050505;border-radius:8px;display:block;border:1px solid var(--ln)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;background:#2a2a2a;color:#fff;font-size:11px;font-weight:800;margin:0 4px 4px 0}
+.pill.b{background:var(--rd);color:#fff}.pill.a{background:#555;color:#fff}
+header .pill{background:#000;color:#fff;font-size:12px;border:1px solid #777}
+.big{font-size:64px;font-weight:900;line-height:1}
+.bar{height:8px;background:#222;border-radius:5px;overflow:hidden;margin:3px 0 6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#666,#fff)}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:5px 4px;text-align:left;border-bottom:1px solid #262626}th{color:#fff;text-transform:uppercase;font-size:11px}
+tr.q{cursor:pointer}tr.q:hover,tr.sel{background:#262626}
+#alert{display:none;border:1px solid var(--rd);border-top:4px solid var(--rd);background:#1a0a0a;font-size:15px;font-weight:700}
+.legend span{margin-right:12px;color:var(--mu);font-size:11px;font-weight:700}
+#login{position:fixed;inset:0;z-index:50;background:radial-gradient(800px 500px at 50% 0%,#222 0%,#000 70%);display:flex;align-items:center;justify-content:center;padding:20px}
+#login .box{width:100%;max-width:400px;background:#0e0e0e;border:1px solid #333;border-top:4px solid #fff;border-radius:12px;padding:28px}
+#login h2{margin:0 0 4px;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:-.01em}
+#login p{margin:0 0 18px;color:var(--mu);font-size:13px}
+.tabs{display:flex;margin-bottom:8px;border:1px solid #333;border-radius:8px;overflow:hidden}
+.tabs button{flex:1;border-radius:0;background:#000;color:var(--mu)}.tabs button.on{background:#fff;color:#000}
+#login .go{width:100%;margin-top:16px;padding:12px}
+#lerr{color:#ff6b6b;font-size:12px;font-weight:700;min-height:18px;margin-top:10px}
+#lhint{margin-top:14px;padding-top:12px;border-top:1px solid #262626;color:#777;font-size:11px}
+.tabs button{font-size:11px;padding:8px 2px}#mt{margin-bottom:8px}
+.lrow{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.chk{display:flex!important;gap:6px;align-items:center;margin:0!important;text-transform:none!important}
+#fg{color:#fff;font-size:12px;cursor:pointer;text-decoration:underline}
+#login .box{max-height:94vh;overflow:auto}
+#audit{max-height:170px;overflow:auto;font:11px ui-monospace,Menlo,monospace;color:#b5b5b5}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}textarea{width:100%;background:#000;color:#fff;border:1px solid #3a3a3a;border-radius:6px;padding:8px;font:inherit;min-height:56px}
+.thumb{height:56px;border-radius:4px;border:1px solid #555;margin:4px 4px 0 0}.kv td:first-child{color:var(--mu);width:38%}#ccx h3.s{margin-top:16px;padding-top:12px;border-top:1px solid var(--ln)}#xmap{max-height:560px}@media(min-width:1101px){main>section:not(:nth-child(2)) .g2{grid-template-columns:1fr}}@media(max-width:700px){.g2{grid-template-columns:1fr}}.tg{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px}.tg .chk{font-size:12px!important}</style></head><body>
+<div id="login"><div class="box">
+<h2>Card Loss Prediction</h2><p>Secure sign-in</p>
+<div class="tabs" id="rt"><button data-r="inv">Investigator</button><button data-r="com">Complainant</button><button data-r="bank">Bank</button><button data-r="adm">Admin</button></div>
+<div class="tabs" id="mt" style="display:none"></div>
+<div id="s1"><label id="l1"></label><input id="u" autocomplete="off"><label id="l2"></label><input id="pw" autocomplete="off">
+<button class="g" id="sotp" style="display:none;margin-top:8px;width:100%">Send OTP</button>
+<div class="lrow"><label class="chk"><input type="checkbox" id="rem" style="width:auto"> Remember me</label><a id="fg">Forgot password?</a></div></div>
+<div id="s2" style="display:none"><label>Verification code</label><input id="c2" autocomplete="off" inputmode="numeric" maxlength="6"></div>
+<div id="lerr"></div><button class="go" id="go">Sign in</button>
+<div id="lhint">Demo logins — Investigator: officer01 / Police@123 · Complainant: Transaction ID TXN8841214470 + OTP 246810, or phone 9876500412 (OTP 246810), or rahul.k@mail.demo / Rahul@123 · Bank: sbi.ops@bank.demo / Bank@123 · Admin: admin@cardloss.demo / Admin@123 · 2-step code for officers and admin: 482913</div>
+</div></div>
+<header><h1>Card Loss Prediction <small>Cybercrime withdrawal forecast · demo data</small></h1>
+<div><span class="pill" id="who"></span><span class="pill" id="idle"></span><span class="pill" id="mode">No case</span><span class="pill" id="acc">Accuracy: –</span><button class="g" id="jump" style="padding:4px 10px;margin-left:6px" onclick="document.getElementById('xbank').scrollIntoView({behavior:'smooth'})">Card centre</button><button class="g" id="out" style="padding:4px 10px;margin-left:6px">Logout</button></div></header>
+<main>
+<section>
+ <div class="card"><h3>1 · Complaint</h3>
+  <label>Demo complaint</label><select id="sel"></select>
+  <div id="cst" style="margin-top:8px"></div><label>Last transaction ID</label><input id="upi" readonly>
+  <label>Card last seen at</label><select id="lostPlace"></select>
+  <label>Approx. time</label><input id="lostTime" placeholder="e.g. 5:30 PM">
+  <label>Reference number</label><input id="ref" placeholder="generated on registration" readonly>
+    <div class="row"><button id="run">Register &amp; run pipeline</button></div></div>
+ <div class="card" id="xcomp"><h3>Submit complaint</h3>
+ <label>Bank type</label><select id="xcbt"></select><label>Bank</label><select id="xcb"></select>
+ <label>Card type</label><select id="xcty"></select><label>Card technology</label><div id="xctech" class="tg"></div>
+ <label>Card last 4 digits (optional)</label><input id="xc4" maxlength="4" inputmode="numeric" placeholder="e.g. 4417">
+ <label>Last transaction ID (optional)</label><input id="xci" placeholder="Leave blank if you don't have it">
+ <label>Last use date &amp; time</label><input id="xcd" type="datetime-local"><label>Last use location</label><input id="xcl">
+ <label>Statement screenshot (optional)</label><input type="file" id="xcs" accept="image/*" multiple>
+ <label>What happened</label><textarea id="xcn" placeholder="Lost, stolen, or unauthorised use"></textarea>
+ <div class="row"><button id="xsub">Submit complaint</button></div><div id="xres" style="margin-top:8px"></div></div>
+ <div class="card" id="xbank"><h3>Review card activity</h3><label>Bank type</label><select id="xbt"></select><label>Bank</label><select id="xb"></select><label>Card type</label><select id="xct"></select><label>Card</label><select id="xc"></select><div id="xinfo" style="margin-top:8px"></div></div>
+ <div class="card"><h3>Add live location / sighting</h3>
+  <label>Place (area, city)</label><input id="mlp" list="kp" placeholder="Any place in India, e.g. Sector 43 bus stand, Chandigarh">
+  <datalist id="kp"></datalist>
+  <label>Seen at (date &amp; time)</label><input id="mlt" type="datetime-local">
+  <label>Amount ₹ (optional, card total limit 50,000)</label><input id="mla" type="number" min="0" max="50000" placeholder="0 to 50,000">
+  <div class="row"><button id="mladd">Add to case</button><button class="g" id="mlgps">Use my live GPS</button></div><div id="mlmsg" style="color:var(--mu);margin-top:6px;font-size:12px"></div></div>
+ 
+ <div class="card"><h3>Pipeline</h3><ul class="steps" id="steps"></ul></div>
+ <div class="card"><h3>Privacy &amp; access log</h3><div id="log"></div></div>
+</section>
+<section>
+ <div class="card" id="admin" style="display:none"><h3>Admin console</h3><div id="adacc"></div>
+<table id="adoff" style="margin-top:8px"></table>
+<div class="row"><input id="nid" placeholder="new officer ID" style="flex:1"><button id="addo">Add officer</button></div>
+<div id="adnote" style="color:var(--mu);margin-top:6px"></div>
+<h3 style="margin-top:12px">Audit log</h3><div id="audit"></div></div>
+<div class="card" id="alert"></div>
+ <div class="card"><h3>Investigator map (40 × 30 km window around the case location)</h3>
+  <div class="mapw"><svg id="map" viewBox="0 0 800 600"></svg></div>
+  <div id="trail" style="margin-top:10px;line-height:2"></div>
+  <div class="row"><button class="g" id="kml">Export hotspots to Google Maps (KML)</button></div>
+  <div class="legend"><span>✖ card last seen</span><span style="color:#888">▮ ATM</span><span style="color:#fff">● live footprint</span><span style="color:#bbb">◌ 15 km geo-fence</span><span style="color:#fff">◎ predicted</span><span>P police</span><span>grey glow = hotspots</span></div></div>
+ <div class="card" id="xtop"><h3>Last seen, last used &amp; usage radius</h3>
+ <table class="kv" id="xlast"></table><svg id="xmap" viewBox="0 0 800 460" style="margin-top:12px"></svg><div id="xleg" style="margin-top:6px;color:var(--mu);font-size:12px"></div><div id="xrad" style="margin-top:8px"></div></div>
+ <div class="card"><h3>Transaction trail · card journey (oldest first)</h3><div class="mapw"><table id="xtr"></table></div>
+ <div class="row"><button class="g" id="xtap">Simulate tap &amp; pay</button><span id="xtapm" style="color:var(--mu);font-size:12px;align-self:center"></span></div></div>
+ <div class="card"><h3>Bank connector · transactions <span style="color:var(--mu);text-transform:none;letter-spacing:0;font-weight:600">(total limit ₹50,000 per card)</span></h3><table id="tx"></table></div>
+</section>
+<section>
+ <div class="card"><h3>Risk score</h3><div class="big" id="risk">–</div><div id="why" style="margin-top:8px"></div></div>
+ <div class="card"><h3>Live location &amp; address</h3><div id="liveloc">Run the pipeline to see the address.</div></div>
+ <div class="card"><h3>Next-location forecast &amp; explainability</h3><div id="pred">Run the pipeline.</div></div>
+ <div class="card"><h3>Case priority queue</h3><table id="queue"></table></div>
+ <div class="card"><h3>Transaction review · last legitimate transaction</h3>
+ <label>Transaction ID of your last genuine use</label><select id="xl"></select><label>Statement screenshot</label><input type="file" id="xs" accept="image/*" multiple>
+ <div id="xsp"></div><div id="xrev" style="margin-top:8px"></div></div>
+ <div class="card"><h3>Block or report this card</h3><div class="row" id="xact" style="margin-top:0"></div><div class="mapw"><table id="xreq" style="margin-top:8px"></table></div></div>
+ <div class="card"><h3>Card types</h3><table id="xguide"></table></div>
+ <div class="card"><h3>Action + communication hub</h3>
+  <div class="row" style="margin-top:0"><button class="g" data-a="Temporary card block">Temp block</button><button class="g" data-a="Permanent card block">Perm block</button><button class="g" data-a="Unblock card">Unblock</button><button class="g" data-a="Complainant notified (SMS/app)">Notify</button><button class="g" data-a="police">Alert police</button><button class="r" data-a="Escalated to Cyber Cell HQ" id="esc">Escalate</button></div>
+  <div id="acts" style="margin-top:8px"></div></div>
+ <div class="card"><h3>Feedback + model monitoring</h3>
+  <div>Did investigators find the card holder at the top forecast?</div>
+  <div class="row"><button id="hit" disabled>Hit</button><button class="g" id="miss" disabled>Miss</button></div>
+  <div id="fb" style="margin-top:6px;color:var(--mu)"></div></div>
+</section></main>
+<script>
+// ---------- demo data (synthetic, seeded) ----------
+let s=11;const rnd=()=>((s=(s*16807)%2147483647)/2147483647);
+const gauss=()=>(rnd()+rnd()+rnd()-1.5)*1.2;
+let HUBS=[["Sector 43 ISBT",16.8,16.5],["Sector 17 Plaza",20.5,14.1],["Railway Station",24,20.4],["Elante / Industrial Area",22.1,18.1],["Mohali Phase 7",14.1,18.2],["Panchkula Sector 5",27.8,19.3]];
+const BANKS=["SBI","HDFC","ICICI","PNB","Axis"];
+let ATMS=[];for(let i=0;i<42;i++){const h=HUBS[i%6];ATMS.push({id:i,name:BANKS[i%5]+" ATM · "+h[0]+" #"+(Math.floor(i/6)+1),x:Math.min(39,Math.max(1,h[1]+gauss()*2.2)),y:Math.min(29,Math.max(1,h[2]+gauss()*2.2)),pen:0,addr:(12+(i*37)%180)+", "+["Mall Road","Station Road","Model Town Main Rd","GT Road","Civil Lines Rd"][i%5]+", "+h[0]+", Chandigarh Tricity"})}
+let POLICE=[["Police Station · Sector 17 (demo)",20.5,13.5],["Police Station · Sector 34 (demo)",18,16.5],["Cyber Cell HQ (demo)",21,15.5],["Police Station · Industrial Area (demo)",22.5,18.8],["Police Station · Mohali (demo)",14.5,18.5]];
+const hist=(hs,n)=>Array.from({length:n},()=>{const h=HUBS[hs[Math.floor(rnd()*hs.length)]];return{x:h[1]+gauss()*1.6,y:h[2]+gauss()*1.6,w:1}});
+const CASES=[
+ {id:"CY-2026-0412",ref:"CLR-0412",lostHub:3,lostTime:"5:30 PM",bank:"SBI",phone:"9876500412",email:"rahul.k@mail.demo",pass:"Rahul@123",name:"Rahul K.",upi:"rahul.k@okbank",tid:"TXN8841214470",card:"•••• 4417",last:{x:24,y:20.4},tx:[{m:75,x:16.8,y:16.5,a:5000,t:"ATM"},{m:48,x:20.5,y:14.1,a:10000,t:"ATM"},{m:22,x:24,y:20.4,a:10000,t:"ATM"}],hist:hist([1,2,5],40)},
+ {id:"CY-2026-0418",ref:"CLR-0418",lostHub:4,lostTime:"6:40 AM",bank:"HDFC",phone:"9876500418",email:"meera.s@mail.demo",pass:"Meera@123",name:"Meera S.",upi:"meera.s@upibank",tid:"TXN5530021187",card:"•••• 9032",last:{x:27.8,y:19.3},tx:[{m:560,x:27.8,y:19.3,a:20000,t:"ATM"}],hist:hist([4,5],45)},
+ {id:"CY-2026-0421",ref:"CLR-0421",lostHub:0,lostTime:"9:00 PM",bank:"ICICI",phone:"9876500421",email:"amit.v@mail.demo",pass:"Amit@123",name:"Amit V.",upi:"amit.v@paybank",tid:"",card:"•••• 1275",last:null,tx:[],hist:hist([0,3,1],35)}];
+let C=null,P=null,live=null,timer=null,stats={h:0,n:0};
+const $=id=>document.getElementById(id),d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const STEPS=["Complaint received","Case registration","Authentication gateway","Bank server connector","Last known location + 15 km geo-fence","Live stream / historical data","Prediction engine","Risk score + priority queue","Alert","Action + feedback loop"];
+$("steps").innerHTML=STEPS.map(t=>"<li>"+t+"</li>").join("");
+$("sel").innerHTML=CASES.map((c,i)=>`<option value="${i}">${c.id} · ${c.name} ${c.card}</option>`).join("");
+const AUDIT=[];const log=m=>{const t=new Date().toLocaleTimeString();AUDIT.unshift({t,u:session?session.who:"anon",m});$("log").innerHTML=`[${t}] ${m}<br>`+$("log").innerHTML;if(session&&session.role=="adm")renderAdmin()};
+const setStep=i=>[...$("steps").children].forEach((e,j)=>e.className=j<i?"done":j==i?"on":"");
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+$("sel").onchange=()=>{C=CASES[$("sel").value];useRegion(C.rk);fillLost();$("upi").value=C.tid||"";$("ref").value=""};
+$("lostPlace").innerHTML='<option value="-1">Not sure</option>'+HUBS.map((x,i)=>`<option value="${i}">${x[0]}</option>`).join("");
+C=CASES[0];$("upi").value=C.tid||"";$("lostPlace").value=C.lostHub;$("lostTime").value=C.lostTime||"";
+
+let ORIGIN={lat:30.7333,lng:76.7794}; // current map centre (moves with the case)
+const KX=o=>1/(111.32*Math.cos(o.lat*Math.PI/180)),KY=1/111.2;
+const toLL=(x,y,o=ORIGIN)=>({lat:o.lat+(15-y)*KY,lng:o.lng+(x-20)*KX(o)});
+const toXY=(lat,lng,o=ORIGIN)=>({x:20+(lng-o.lng)/KX(o),y:15-(lat-o.lat)/KY});
+const conv=(p,o1,o2)=>{const l=toLL(p.x,p.y,o1),q=toXY(l.lat,l.lng,o2);p.x=q.x;p.y=q.y};
+// ---- regions: each case lives on a 40 x 30 km map window that can be anywhere in India ----
+const REG={chd:{o:ORIGIN,ATMS,HUBS,POLICE}};CASES.forEach(c=>c.rk="chd");
+function mkRegion(lat,lng,name){
+ const HU=[["City Centre",20,15],["Railway Station",24,19],["Main Bus Stand",15,17],["Main Market",18,11],["Industrial Area",27,12],["Mall Road",21,21]];
+ const hs=HU.map(x=>[x[0]+", "+name,x[1],x[2]]),at=[],ST=["Mall Road","Station Road","Main Bazaar","GT Road","Civil Lines Rd"];
+ for(let i=0;i<42;i++){const q=hs[i%6];at.push({id:i,name:BANKS[i%5]+" ATM · "+q[0]+" #"+(Math.floor(i/6)+1),x:Math.min(39,Math.max(1,q[1]+gauss()*2.2)),y:Math.min(29,Math.max(1,q[2]+gauss()*2.2)),pen:0,addr:(12+(i*37)%180)+", "+ST[i%5]+", "+q[0]})}
+ return{o:{lat,lng},ATMS:at,HUBS:hs,POLICE:[["Police Station · "+name+" City Centre (demo)",19,14],["Police Station · "+name+" Railway (demo)",23,18],["Cyber Cell · "+name+" (demo)",21,16],["Police Station · "+name+" Industrial (demo)",26,13]]}}
+function useRegion(k){const r=REG[k];ORIGIN=r.o;ATMS=r.ATMS;HUBS=r.HUBS;POLICE=r.POLICE}
+function fillLost(){$("lostPlace").innerHTML='<option value="-1">Not sure</option>'+HUBS.map((x,i)=>`<option value="${i}">${x[0]}</option>`).join("");$("lostPlace").value=C.lostHub;$("lostTime").value=C.lostTime||""}
+function moveRegion(c,lat,lng,name){
+ c.tx.forEach(t=>{if(!t.label)t.label=hubOf(t)});
+ const old=REG[c.rk].o,key=name.toLowerCase().replace(/\W+/g,"-")+"-"+Math.round(lat*5)+"-"+Math.round(lng*5);
+ if(!REG[key])REG[key]=mkRegion(lat,lng,name);
+ const nw=REG[key].o;[c.last,...c.tx].filter(Boolean).forEach(p=>conv(p,old,nw));
+ c.rk=key;useRegion(key);c.hist=hist([0,2,3],30);c.lost=null;c.lostHub=-1;fillLost()}
+function addrOf(pt){const a=ATMS.slice().sort((p,q)=>d(p,pt)-d(q,pt))[0];return{a,dist:d(a,pt),ll:toLL(pt.x,pt.y)}}
+function drawLive(){
+ const ev=liveEv(C).slice().sort((a,b)=>a.m-b.m);let pt,st;
+ if(P.m==1&&ev.length){pt=ev[0];st="LIVE"}else if(C.last){pt=C.last;st="LAST KNOWN"}else if(C.lost){pt=C.lost;st="REPORTED LOST"}
+ else{$("liveloc").innerHTML="<span class='pill b'>UNKNOWN</span> No location on record, so no address is available.";return}
+ const q=addrOf(pt),ll=pt.lat?{lat:pt.lat,lng:pt.lng}:q.ll,man=!!pt.label,co=ll.lat.toFixed(5)+", "+ll.lng.toFixed(5),txt=man?pt.label:q.a.name+", "+q.a.addr;
+ $("liveloc").innerHTML=`<span class="pill ${st=="LIVE"?"b":""}">${st}</span><span class="pill">Updated ${new Date().toLocaleTimeString()}</span>
+ <div style="font-weight:800;margin:6px 0 2px">${man?esc(pt.label):q.a.name}</div><div>${man?"Location added by investigator":q.a.addr}</div>
+ <div style="color:var(--mu);margin-top:4px">${man?"Added location":"Nearest ATM to the reported point ("+(q.dist<.1?"exact":"~"+q.dist.toFixed(1)+" km away")+")"} · GPS ${co}</div>
+ <div class="row"><button class="g" id="cpy">Copy address</button><a href="https://www.google.com/maps?q=${ll.lat},${ll.lng}" target="_blank" rel="noopener" style="border:1px solid #777;border-radius:6px;padding:9px 14px;color:#fff;font-weight:800;text-transform:uppercase;text-decoration:none;font-size:13px">Open in Maps</a></div>`;
+ $("cpy").onclick=()=>{try{navigator.clipboard.writeText(txt+" ("+co+")")}catch(e){}$("cpy").textContent="Copied"}}
+const hubOf=p=>HUBS.slice().sort((a,b)=>Math.hypot(a[1]-p.x,a[2]-p.y)-Math.hypot(b[1]-p.x,b[2]-p.y))[0][0];
+function drawTrail(){
+ const st=[];if(C.lost)st.push({n:C.lost.name,l:"card last seen"+(C.lostTime?" ~"+C.lostTime:""),lost:1});
+ C.tx.slice().sort((a,b)=>b.m-a.m).forEach(t=>{const n=t.label||hubOf(t),lb=t.m<1?"now":t.m>=120?Math.round(t.m/60)+" h ago":Math.round(t.m)+" min ago",l=st[st.length-1];
+  if(l&&!l.lost&&l.n==n)l.l=lb;else st.push({n,l:lb})});
+ const nx=P?` → <span class="pill b">Next (predicted): ${hubOf(P.top[0].a)}</span>`:"";
+ $("trail").innerHTML="<b>Journey trail:</b> "+(st.length?st.map(s=>`<span class="pill ${s.lost?"a":""}">${s.n} · ${s.l}</span>`).join(" → "):"no activity yet")+nx}
+// ---------- engine ----------
+function mode(c){const ev=liveEv(c);return c.last&&ev.length&&ev.every(e=>d(e,c.last)<=15)?1:2}
+function liveEv(c){return c.tx.filter(t=>t.m<=120)}
+function predict(c){
+ const ev=liveEv(c).slice().sort((a,b)=>b.m-a.m),m=mode(c),ref=ev.length?ev[ev.length-1]:(c.last||c.lost);
+ let vx=0,vy=0;if(m==1&&ev.length>1){const a=ev[ev.length-2],b=ev[ev.length-1];const n=d(a,b)||1;vx=(b.x-a.x)/n;vy=(b.y-a.y)/n}
+ const raw=ATMS.map(a=>{
+  let hot=c.hist.reduce((q,h)=>q+h.w*Math.exp(-((a.x-h.x)**2+(a.y-h.y)**2)/8),0);
+  const prox=ref?Math.exp(-d(a,ref)/6):.3;
+  let dir=.5;if(m==1&&ref&&(vx||vy)){const n=d(a,ref)||1;dir=((a.x-ref.x)*vx+(a.y-ref.y)*vy)/n*.5+.5}
+  return{a,hot,prox,dir}});
+ const mh=Math.max(...raw.map(r=>r.hot))||1;
+ raw.forEach(r=>{r.hot/=mh;r.sc=(m==1?.4*r.prox+.35*r.dir+.25*r.hot:.7*r.hot+.3*r.prox)*Math.max(.2,1-r.a.pen);
+  r.parts=m==1?[["Proximity to live footprint",.4*r.prox],["Direction of travel",.35*r.dir],["Historical hotspot",.25*r.hot]]:[["Historical hotspot density",.7*r.hot],[ref?"Proximity to last known":"No location anchor",.3*r.prox]]});
+ raw.sort((a,b)=>b.sc-a.sc);const top=raw.slice(0,3),sum=top.reduce((q,r)=>q+r.sc,0);
+ top.forEach(r=>r.p=r.sc/sum*(m==1?.9:.7));
+ return{m,ref,top}}
+function risk(c){
+ const ev=liveEv(c).sort((a,b)=>b.m-a.m),r=[];let v=0;
+ if(ev.length>1){const a=ev[ev.length-2],b=ev[ev.length-1];v=d(a,b)/Math.max(.01,(a.m-b.m)/60)}
+ const vs=Math.min(30,v),cs=Math.min(32,ev.length*8),tot=c.tx.reduce((q,t)=>q+t.a,0)/Math.max(1,c.tx.length),as=Math.min(20,tot/1000*2);
+ const rec=ev.length?15:c.tx.length?Math.max(0,10-c.tx[0].m/60):0;
+ const sc=Math.round(Math.min(100,vs+cs+as+rec+(c.last?0:8)));
+ return{sc,parts:[["velocity "+v.toFixed(0)+" km/h",vs],["withdrawals in 2h: "+ev.length,cs],["avg amount ₹"+Math.round(tot),as],[ev.length?"active now":c.last?"stale trail":"unknown location",rec]]}}
+
+// ---------- rendering ----------
+const X=v=>v*20,Y=v=>v*20;
+function drawMap(){
+ let h=`<defs><filter id="bl"><feGaussianBlur stdDeviation="14"/></filter></defs>`;
+ for(let i=0;i<=40;i+=5)h+=`<line x1="${X(i)}" y1="0" x2="${X(i)}" y2="600" stroke="#161616"/>`;
+ for(let i=0;i<=30;i+=5)h+=`<line x1="0" y1="${Y(i)}" x2="800" y2="${Y(i)}" stroke="#161616"/>`;
+ HUBS.forEach(x=>h+=`<text x="${X(x[1])}" y="${Y(x[2])-46}" fill="#555" font-size="11" text-anchor="middle">${x[0]}</text>`);
+ if(!C){$("map").innerHTML=h;return}
+ h+=`<g filter="url(#bl)">`+C.hist.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${18*p.w}" fill="#bbb" opacity=".25"/>`).join("")+`</g>`;
+ if(C.last&&P)h+=`<circle cx="${X(C.last.x)}" cy="${Y(C.last.y)}" r="300" fill="#fff" fill-opacity=".03" stroke="#aaa" stroke-width="3" stroke-dasharray="6 5"/>`;
+ h+=POLICE.map(p=>`<text x="${X(p[1])}" y="${Y(p[2])}" fill="#fff" font-size="13" font-weight="700" text-anchor="middle">P<title>${p[0]}</title></text>`).join("");
+ h+=ATMS.map(a=>`<rect x="${X(a.x)-3}" y="${Y(a.y)-3}" width="6" height="6" fill="#8a8a8a"><title>${a.name}</title></rect>`).join("");
+ const ev=C.tx.filter(t=>t.x>-2&&t.x<42&&t.y>-2&&t.y<32).sort((a,b)=>b.m-a.m);
+ if(ev.length>1)h+=`<polyline points="${ev.map(t=>X(t.x)+","+Y(t.y)).join(" ")}" fill="none" stroke="#fff" stroke-width="3"/>`;
+ h+=ev.map(t=>`<circle cx="${X(t.x)}" cy="${Y(t.y)}" r="5" fill="#fff"><title>₹${t.a} · ${t.m} min ago</title></circle>`).join("");
+ if(C.last)h+=`<text x="${X(C.last.x)}" y="${Y(C.last.y)-10}" font-size="18" text-anchor="middle">📍</text>`;
+ if(C.lost)h+=`<text x="${X(C.lost.x)}" y="${Y(C.lost.y)+6}" fill="#fff" font-size="22" font-weight="900" text-anchor="middle">✖<title>Card last seen here${C.lostTime?" ~"+C.lostTime:""}</title></text>`;
+ if(P)h+=P.top.map((r,i)=>`<g><circle cx="${X(r.a.x)}" cy="${Y(r.a.y)}" r="${14-i*3}" fill="none" stroke="#fff" stroke-width="4"><animate attributeName="r" values="${10-i*2};${18-i*3};${10-i*2}" dur="1.8s" repeatCount="indefinite"/></circle><text x="${X(r.a.x)+12}" y="${Y(r.a.y)-8}" fill="#fff" font-size="15" font-weight="700">#${i+1} ${(r.p*100).toFixed(0)}%</text></g>`).join("");
+ $("map").innerHTML=h}
+function drawStatus(){const s=C.st||"ACTIVE";const tt=total(C),pc=Math.min(100,tt/MAX_WD*100);$("cst").innerHTML=`<span class="pill ${s=="ACTIVE"?"":"b"}">Card ${C.card} · ${s}</span><div style="font-size:12px;color:var(--mu)">Withdrawn ₹${tt.toLocaleString("en-IN")} of ₹${MAX_WD.toLocaleString("en-IN")} limit${tt>=MAX_WD?" · LIMIT REACHED":""}</div><div class="bar"><i style="width:${pc}%"></i></div>`}
+function drawTx(){drawTrail();drawStatus();
+ $("tx").innerHTML="<tr><th>When</th><th>Type</th><th>₹</th><th>Place</th></tr>"+(C.tx.length?C.tx.slice().sort((a,b)=>a.m-b.m).map(t=>`<tr><td>${t.m<1?"just now":t.m>=120?Math.round(t.m/60)+" h ago":Math.round(t.m)+" min ago"}</td><td>${t.t}</td><td>${t.a}</td><td>${t.label?esc(t.label):addrOf(t).a.name}</td></tr>`).join(""):"<tr><td colspan=4>No transactions on file – location unknown</td></tr>")}
+function drawQueue(){
+ const rows=allowed().map(c=>({c,r:risk(c)})).sort((a,b)=>b.r.sc-a.r.sc);
+ $("queue").innerHTML="<tr><th>#</th><th>Case</th><th>Mode</th><th>Risk</th></tr>"+rows.map((x,i)=>`<tr class="q ${x.c==C?"sel":""}" data-i="${CASES.indexOf(x.c)}"><td>${i+1}</td><td>${x.c.id.slice(-4)} ${x.c.name}</td><td>${mode(x.c)==1?"Live":"Hist."}</td><td>${x.r.sc}</td></tr>`).join("");
+ [...$("queue").querySelectorAll("tr.q")].forEach(tr=>tr.onclick=()=>{$("sel").value=tr.dataset.i;$("sel").onchange();run()})}
+function drawResult(){
+ const R=risk(C);P=predict(C);
+ $("risk").textContent=R.sc;$("risk").style.color=R.sc>=70?"var(--rd)":R.sc>=40?"var(--am)":"var(--gn)";
+ $("why").innerHTML=R.parts.map(p=>`<span class="pill ${R.sc>=70?"b":""}">${p[0]} (+${p[1].toFixed(0)})</span>`).join("");
+ $("mode").textContent=P.m==1?"CASE 1 · live within 15 km":"CASE 2 · historical / unknown";
+ const from=P.ref;
+ $("pred").innerHTML=P.top.map((r,i)=>{const eta=from?Math.round(d(r.a,from)/25*60):null;return`<div style="margin-bottom:8px"><b>#${i+1} ${r.a.name}</b><div style="color:var(--mu);font-size:11px">📍 ${r.a.addr}</div><div class="bar"><i style="width:${r.p*100}%"></i></div>
+ <span style="color:var(--mu)">${(r.p*100).toFixed(0)}% likely${eta!==null?` · ETA ~${eta} min`:""}</span><br><span style="color:var(--mu);font-size:11px">Why: ${r.parts.map(p=>p[0]+" "+(p[1]*100).toFixed(0)+"%").join(" · ")}</span></div>`}).join("");
+ const t=P.top[0],pol=POLICE.slice().sort((a,b)=>d(a2(a),t.a)-d(a2(b),t.a))[0];
+ const al=$("alert");al.style.display="block";
+ al.innerHTML=`<b style="color:#ff6b6b">🚨 ALERT · ${C.id}</b> · risk ${R.sc}/100 · forecast: <b>${t.a.name}</b>, ${t.a.addr} (${(t.p*100).toFixed(0)}%). Nearest unit: <b>${pol[0]}</b> (${d(a2(pol),t.a).toFixed(1)} km).`;
+ P.pol=pol;applyPerms(R.sc);drawLive();
+ drawMap();drawTx();drawQueue()}
+const a2=p=>({x:p[1],y:p[2]});
+
+// ---------- pipeline ----------
+async function run(){
+ clearInterval(timer);const lh=+$("lostPlace").value;C.lostHub=lh;C.lostTime=$("lostTime").value.trim();C.lost=lh>=0?{x:HUBS[lh][1],y:HUBS[lh][2],name:HUBS[lh][0]}:null;
+ $("run").disabled=true;$("acts").innerHTML="";$("alert").style.display="none";$("liveloc").textContent="Locating…";P=null;drawMap();
+ setStep(0);log("Complaint received for card "+C.card);await wait(350);
+ setStep(1);const ref=C.ref;$("ref").value=ref;log("Case registered · reference "+ref+(C.lost?" · card last seen at "+C.lost.name+(C.lostTime?" around "+C.lostTime:""):""));await wait(450);
+ setStep(2);const ok=!!session;
+ log(`Auth: API key valid · complaint reference match · identity verified (${session?session.provider:"none"}) · access logged (masked PII)`);
+ if(!ok){$("run").disabled=false;return}await wait(450);
+ setStep(3);log(`Bank connector: ${C.tx.length} txns, card status ${C.st||"ACTIVE"}, ${ATMS.length} ATMs/POS indexed`);drawTx();await wait(450);
+ setStep(4);log(C.last?`Last known location (${C.last.x}, ${C.last.y}) km · 15 km geo-fence armed`:"No last known location – geo-fence unavailable");await wait(450);
+ setStep(5);log(mode(C)==1?"CASE 1: live event stream attached":"CASE 2: historical heatmap + hotspots ("+C.hist.length+" past withdrawals)");await wait(450);
+ setStep(6);drawResult();await wait(400);
+ setStep(8);log("Alert dispatched to investigator map");await wait(300);setStep(10);
+ $("run").disabled=false;
+ if(mode(C)==1)timer=setInterval(stream,4500)}
+function stream(){ // simulated live event stream: suspect keeps moving toward forecast
+ const tgt=P.top[Math.floor(rnd()*2)].a;const last=C.tx.slice().sort((a,b)=>a.m-b.m)[0];
+ const blk=C.st&&C.st!="ACTIVE",rem=MAX_WD-total(C),want=[5000,10000,20000][Math.floor(rnd()*3)],ok=!blk&&rem>0;
+ C.tx.forEach(t=>t.m+=4.5/2);C.tx.unshift({m:0,x:tgt.x,y:tgt.y,a:ok?Math.min(want,rem):want,t:ok?"ATM":"DECLINED"});
+ C.last={x:tgt.x,y:tgt.y};log("LIVE event: "+(ok?"withdrawal":blk?"DECLINED attempt (card blocked)":"DECLINED attempt (₹50,000 limit reached)")+" at "+tgt.name);
+ C.hist.push({x:tgt.x,y:tgt.y,w:1.5});drawResult()}
+
+// ---------- action hub + feedback ----------
+document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{
+ if(!P||!can(b.dataset.a))return;let a=b.dataset.a;
+ if(a=="police")a="Alert sent to "+P.pol[0]+" · target: "+P.top[0].a.name+", "+P.top[0].a.addr;
+ else if(/^(Temporary|Permanent)/.test(a)){
+  if(C.st=="PERMANENTLY BLOCKED")a="Card "+C.card+" is already permanently blocked";
+  else if(!b.dataset.arm){b.dataset.o=b.dataset.o||b.textContent;b.dataset.arm=1;b.textContent="Click again to confirm";b._t=setTimeout(()=>{delete b.dataset.arm;b.textContent=b.dataset.o},4000);return}
+  else{clearTimeout(b._t);delete b.dataset.arm;b.textContent=b.dataset.o;C.st=/^Perm/.test(a)?"PERMANENTLY BLOCKED":"TEMP BLOCKED";a="Card "+C.card+" is now "+C.st+" (bank server updated)"}}
+ else if(a=="Unblock card"){
+  if(C.st=="TEMP BLOCKED"){C.st="ACTIVE";a="Card "+C.card+" unblocked (ACTIVE)"}
+  else a=C.st=="PERMANENTLY BLOCKED"?"Permanent blocks cannot be reversed here. A new card must be issued.":"Card is already active"}
+ drawStatus();
+ $("acts").innerHTML=`<div>✔ ${a} <span style="color:var(--mu)">· ${new Date().toLocaleTimeString()}</span></div>`+$("acts").innerHTML;log("Action: "+a)});
+function fb(hit){
+ const t=P.top[0];stats.n++;if(hit){stats.h++;C.hist.push({x:t.a.x,y:t.a.y,w:2})}else t.a.pen=Math.min(.6,t.a.pen+.25);
+ $("acc").textContent=`Accuracy: ${Math.round(stats.h/stats.n*100)}% (${stats.h}/${stats.n})`;
+ $("fb").textContent=hit?"Hit recorded → heatmap weight increased at "+t.a.name:"Miss recorded → "+t.a.name+" down-weighted; model re-scored";
+ log("Feedback: "+(hit?"HIT":"MISS")+" · heatmap & model auto-updated");drawResult()}
+$("hit").onclick=()=>fb(true);$("miss").onclick=()=>fb(false);
+
+// ---------- login: roles, OTP, email, 2-step, remember me, auto-logout ----------
+const FIREBASE_CONFIG=null; // paste your web config here: {apiKey,authDomain,projectId,appId}
+const OFFICERS={officer01:"Police@123",cyber02:"Cyber@123"};
+const ADMINS={"admin@cardloss.demo":"Admin@123"};
+const BANKUSERS={"sbi.ops@bank.demo":{p:"Bank@123",bank:"SBI"},"hdfc.ops@bank.demo":{p:"Bank@123",bank:"HDFC"}};
+const OTPC="246810",OTP2="482913",IDLE_S=300;
+const METHODS={inv:[{k:"off",n:"Officer ID",a:"Officer ID",b:"Password",pw:1}],
+ com:[{k:"tid",n:"Transaction ID",a:"Transaction ID",b:"6-digit OTP",otp:1},{k:"otp",n:"Mobile OTP",a:"Mobile number",b:"6-digit OTP",otp:1},{k:"em",n:"Email",a:"Email",b:"Password",pw:1}],
+ bank:[{k:"em",n:"Email",a:"Bank email",b:"Password",pw:1}],adm:[{k:"em",n:"Email",a:"Admin email",b:"Password",pw:1}]};
+let session=null,ROLE="inv",MI=0,pending=null,otpFor=null,idleLeft=IDLE_S,idleT=null;
+const byTid=v=>CASES.find(x=>((window.CARDDATA||{})[x.id]||{cards:[]}).cards.some(cd=>cd.tx.some(t=>t[0]==String(v).trim().toUpperCase())));
+const ph=s=>String(s).replace(/\D/g,"").slice(-10);
+const esc=s=>String(s).replace(/[<>&"]/g,"");
+const loadJs=u=>new Promise((r,j)=>{const e=document.createElement("script");e.src=u;e.onload=r;e.onerror=j;document.head.appendChild(e)});
+async function backendIdentity(){ // Firebase runs silently after credentials pass; no visible Google button
+ if(!FIREBASE_CONFIG)return{ok:true,provider:"local-demo"};
+ try{const b="https://www.gstatic.com/firebasejs/10.12.2/";
+  await loadJs(b+"firebase-app-compat.js");await loadJs(b+"firebase-auth-compat.js");
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  const r=await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  return{ok:true,provider:"firebase",email:r.user.email}}catch(e){return{ok:false,err:e.code||"identity check failed"}}}
+function allowed(){if(!session)return CASES;if(session.role=="com")return[session.c];if(session.role=="bank")return CASES.filter(c=>c.bank==session.bank);return CASES}
+function can(a){const r=session?session.role:"inv";return r=="inv"||(r=="bank"&&/block/i.test(a))}
+function applyPerms(sc){document.querySelectorAll("[data-a]").forEach(b=>b.disabled=!P||!can(b.dataset.a)||(b.id=="esc"&&sc<70));
+ $("hit").disabled=$("miss").disabled=!P||!(session&&session.role=="inv");$("mladd").disabled=!(session&&session.role=="inv");$("mladd").title="Investigators only"}
+function fillSel(L){$("sel").innerHTML=L.map(c=>`<option value="${CASES.indexOf(c)}">${c.id} · ${c.name} ${c.card} (${c.bank})</option>`).join("")}
+function draw(){
+ document.querySelectorAll("#rt button").forEach(b=>{b.className=b.dataset.r==ROLE?"on":"";b.onclick=()=>{ROLE=b.dataset.r;MI=0;pending=null;show1();draw()}});
+ const ms=METHODS[ROLE],m=ms[MI];$("mt").style.display=ms.length>1?"flex":"none";
+ $("mt").innerHTML=ms.map((x,i)=>`<button data-m="${i}" class="${i==MI?"on":""}">${x.n}</button>`).join("");
+ $("mt").querySelectorAll("button").forEach(b=>b.onclick=()=>{MI=+b.dataset.m;draw()});
+ $("l1").textContent=m.a;$("l2").textContent=m.b;$("pw").type=m.pw?"password":"text";
+ $("u").value=$("pw").value="";$("lerr").textContent="";
+ $("fg").style.display=m.pw?"inline":"none";$("sotp").style.display=m.otp?"block":"none"}
+function show1(){$("s1").style.display="block";$("s2").style.display="none";$("go").textContent="Sign in";$("c2").value="";pending=null}
+function check(){const u=$("u").value.trim(),p=$("pw").value.trim(),k=METHODS[ROLE][MI].k;
+ if(ROLE=="inv")return OFFICERS[u]&&OFFICERS[u]===p?{who:u,role:"inv",label:"Investigator",tfa:1}:null;
+ if(ROLE=="adm")return ADMINS[u.toLowerCase()]===p?{who:u,role:"adm",label:"Admin",tfa:1}:null;
+ if(ROLE=="bank"){const b=BANKUSERS[u.toLowerCase()];return b&&b.p===p?{who:u,role:"bank",label:"Bank · "+b.bank,bank:b.bank}:null}
+ const c=k=="tid"?(otpFor&&p===OTPC?CASES.find(x=>x.id===otpFor&&byTid(u)===x):null):k=="otp"?(otpFor===ph(u)&&p===OTPC?CASES.find(x=>x.phone==ph(u)):null):CASES.find(x=>x.email==u.toLowerCase()&&x.pass==p);
+ return c?{who:c.name,role:"com",label:"Complainant",c}:null}
+$("sotp").onclick=()=>{const u=ph($("u").value),err=$("lerr"),c=METHODS[ROLE][MI].k=="tid"?byTid($("u").value):CASES.find(x=>x.phone==u);
+ if(!c){err.style.color="";err.textContent="No complaint found for these details.";return}
+ otpFor=METHODS[ROLE][MI].k=="tid"?c.id:u;err.style.color="#aaa";err.textContent="Demo SMS sent to ••••••"+c.phone.slice(-4)+": your one-time code is "+OTPC;log("OTP requested for ••••"+c.phone.slice(-4))};
+$("fg").onclick=()=>{const u=esc($("u").value.trim()),err=$("lerr");err.style.color="#aaa";
+ err.textContent=u?"If this account exists, a password reset link has been sent to its registered email. (demo)":"Enter your ID or email first.";if(u)log("Password reset requested for "+u)};
+async function signIn(){const err=$("lerr");err.style.color="";
+ if(pending){if($("c2").value.trim()!==OTP2){err.textContent="Incorrect verification code.";log("Failed 2-step verification for "+pending.who);return}return finish(pending)}
+ const u=check();if(!u){err.textContent="Incorrect credentials. Check your details and try again.";log("Failed login attempt ("+ROLE+")");return}
+ if(u.tfa){pending=u;$("s1").style.display="none";$("s2").style.display="block";$("go").textContent="Verify";err.style.color="#aaa";err.textContent="A one-time code was sent to your registered device. (Demo code: "+OTP2+")";return}
+ finish(u)}
+async function finish(u){const err=$("lerr");err.style.color="#aaa";err.textContent="Verifying identity…";$("go").disabled=true;
+ const id=await backendIdentity();$("go").disabled=false;err.style.color="";
+ if(!id.ok){err.textContent="Identity verification failed ("+id.err+").";return}
+ session={...u,provider:id.provider};pending=null;
+ try{if($("rem").checked)localStorage.setItem("clp_user",JSON.stringify({r:ROLE,m:MI,u:$("u").value.trim()}));else localStorage.removeItem("clp_user")}catch(e){}
+ $("login").style.display="none";$("who").textContent=u.label+" · "+u.who;
+ fillSel(allowed());$("sel").disabled=false;$("sel").onchange();
+ if(u.role=="adm")renderAdmin();applyPerms(0);drawQueue();drawTx();startIdle();
+ log("Signed in ("+u.label+")"+(u.tfa?" with 2-step verification":""))}
+function startIdle(){clearInterval(idleT);idleLeft=IDLE_S;idleT=setInterval(()=>{idleLeft--;$("idle").textContent="Auto-logout "+Math.floor(idleLeft/60)+":"+String(idleLeft%60).padStart(2,"0");if(idleLeft<=0)logout("Signed out after 5 minutes of inactivity.")},1000)}
+["mousemove","keydown","click","touchstart"].forEach(e=>document.addEventListener(e,()=>{idleLeft=IDLE_S}));
+function logout(msg){if(session)log("Signed out"+(msg?" (inactivity)":""));clearInterval(idleT);clearInterval(timer);session=null;P=null;C=CASES[0];useRegion(C.rk);fillLost();
+ ["idle","who","acts","ref"].forEach(i=>$(i).textContent="");$("ref").value="";$("acts").innerHTML="";$("alert").style.display="none";$("admin").style.display="none";$("liveloc").textContent="Run the pipeline to see the address.";$("mode").textContent="No case";
+ fillSel(CASES);$("sel").value=0;$("upi").value=C.tid||"";drawMap();drawTx();drawQueue();$("run").disabled=false;applyPerms(0);
+ $("login").style.display="flex";show1();draw();$("lerr").style.color="";$("lerr").textContent=msg||""}
+function renderAdmin(){$("admin").style.display="block";const n=stats.n;
+ $("adacc").innerHTML=`<span class="pill">Model accuracy: ${n?Math.round(stats.h/n*100)+"% ("+stats.h+"/"+n+")":"no feedback yet"}</span><span class="pill">Officers: ${Object.keys(OFFICERS).length}</span><span class="pill">Cases: ${CASES.length}</span>`;
+ $("adoff").innerHTML="<tr><th>Officer ID</th><th></th></tr>"+Object.keys(OFFICERS).map(o=>`<tr><td>${o}</td><td><button class="g" data-rs="${o}" style="padding:3px 8px">Reset password</button> <button class="g" data-rm="${o}" style="padding:3px 8px">Remove</button></td></tr>`).join("");
+ $("audit").innerHTML=AUDIT.slice(0,30).map(e=>`<div>${e.t} · <b>${e.u}</b> · ${e.m}</div>`).join("");
+ document.querySelectorAll("[data-rs]").forEach(b=>b.onclick=()=>{const t="Temp@"+Math.floor(1000+Math.random()*9000);OFFICERS[b.dataset.rs]=t;$("adnote").textContent="Temporary password for "+b.dataset.rs+": "+t;log("Password reset for officer "+b.dataset.rs)});
+ document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{delete OFFICERS[b.dataset.rm];$("adnote").textContent="Removed "+b.dataset.rm;log("Officer removed: "+b.dataset.rm)})}
+$("addo").onclick=()=>{const v=$("nid").value.trim();if(!/^[a-z0-9_.-]{3,20}$/i.test(v)||OFFICERS[v]){$("adnote").textContent="Use 3–20 letters/numbers, and a new ID.";return}
+ const t="Temp@"+Math.floor(1000+Math.random()*9000);OFFICERS[v]=t;$("nid").value="";$("adnote").textContent="Officer "+v+" added. Temporary password: "+t;log("Officer added: "+v)};
+$("go").onclick=signIn;[$("u"),$("pw"),$("c2")].forEach(e=>e.onkeydown=ev=>{if(ev.key=="Enter")signIn()});
+$("out").onclick=()=>logout();
+draw();try{const s=JSON.parse(localStorage.getItem("clp_user")||"null");if(s&&METHODS[s.r]){ROLE=s.r;MI=METHODS[s.r][s.m]?s.m:0;draw();$("u").value=s.u;$("rem").checked=true}}catch(e){}
+
+const MAX_WD=50000; // total amount that can be withdrawn per card (Rs)
+function total(c){return c.tx.filter(t=>t.t!=="DECLINED").reduce((s,t)=>s+(t.a||0),0)}
+// ---------- manual location entry ----------
+const KNOWN=[["Sector 43 ISBT (bus stand), Chandigarh",30.7195,76.7462,"sector 43|sector-43|isbt 43|sec 43"],
+["Sector 17 Plaza, Chandigarh",30.7411,76.7847,"sector 17|sector-17|sec 17|plaza"],
+["Chandigarh Railway Station",30.6844,76.8217,"railway station|railway stn"],
+["Sector 35 Market, Chandigarh",30.7256,76.7570,"sector 35|sector-35|sec 35"],
+["Elante Mall, Industrial Area Phase 1",30.7056,76.8012,"elante|industrial area"],
+["Sector 22 Market, Chandigarh",30.7330,76.7720,"sector 22|sector-22|sec 22"],
+["PGIMER, Sector 12, Chandigarh",30.7648,76.7757,"pgi|sector 12|sec 12"],
+["Mohali Phase 7",30.7046,76.7179,"phase 7|mohali"],
+["Panchkula Sector 5",30.6942,76.8606,"panchkula"],
+["Zirakpur",30.6425,76.8173,"zirakpur"],
+["Manimajra, Chandigarh",30.7185,76.8268,"manimajra"]];
+const CITIES="delhi|new delhi,28.6315,77.2167;mumbai|bombay,18.9398,72.8355;bengaluru|bangalore,12.9756,77.6068;hyderabad,17.3616,78.4747;chennai|madras,13.0827,80.2707;kolkata|calcutta,22.5839,88.3425;pune,18.5308,73.8475;ahmedabad,23.0258,72.6005;jaipur,26.9239,75.8267;lucknow,26.8322,80.9209;ludhiana,30.9010,75.8573;amritsar,31.6340,74.8723;jalandhar,31.3260,75.5762;patiala,30.3398,76.3869;shimla,31.1048,77.1734;dehradun,30.3165,78.0322;gurugram|gurgaon,28.4595,77.0266;noida,28.5355,77.3910;faridabad,28.4089,77.3178;meerut,28.9845,77.7064;agra,27.1767,78.0081;kanpur,26.4499,80.3319;varanasi,25.3176,82.9739;patna,25.5941,85.1376;ranchi,23.3441,85.3096;bhubaneswar,20.2961,85.8245;raipur,21.2514,81.6296;bhopal,23.2599,77.4126;indore,22.7196,75.8577;nagpur,21.1458,79.0882;surat,21.1702,72.8311;vadodara,22.3072,73.1812;rajkot,22.3039,70.8022;nashik,19.9975,73.7898;jodhpur,26.2389,73.0243;udaipur,24.5854,73.7125;kota,25.2138,75.8648;goa|panaji,15.4909,73.8278;visakhapatnam|vizag,17.6868,83.2185;coimbatore,11.0168,76.9558;madurai,9.9252,78.1198;kochi|cochin,9.9312,76.2673;thiruvananthapuram|trivandrum,8.5241,76.9366;mysuru|mysore,12.2958,76.6394;guwahati,26.1445,91.7362;jammu,32.7266,74.8570;srinagar,34.0837,74.7973".split(";").map(x=>{const a=x.split(",");return[a[0].split("|"),+a[1],+a[2]]});
+$("kp").innerHTML=KNOWN.map(k=>`<option value="${k[0]}">`).join("")+CITIES.map(c=>`<option value="${c[0][0][0].toUpperCase()+c[0][0].slice(1)}">`).join("");
+{const n=new Date();$("mlt").value=new Date(n-n.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+async function geocode(q){const s=q.trim().toLowerCase();
+ const city=CITIES.find(c=>c[0].some(a=>new RegExp("\\b"+a+"\\b").test(s))),tri=/chandigarh|mohali|panchkula|zirakpur|manimajra/.test(s);
+ if(!city||tri){const k=KNOWN.find(x=>x[0].toLowerCase()==s)||KNOWN.find(x=>x[3].split("|").some(a=>s.includes(a)));if(k)return{lat:k[1],lng:k[2],src:"built-in place list, approx."}}
+ const m=s.match(/^(-?\d+(\.\d+)?)\s*[, ]\s*(-?\d+(\.\d+)?)$/);if(m)return{lat:+m[1],lng:+m[3],src:"coordinates"};
+ try{const c=new AbortController();setTimeout(()=>c.abort(),6000);
+  const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q="+encodeURIComponent(q),{signal:c.signal});
+  const j=await r.json();if(j[0])return{lat:+j[0].lat,lng:+j[0].lon,src:"OpenStreetMap search"}}catch(e){}
+ if(city)return{lat:city[1],lng:city[2],src:"city centre, approx. - exact street needs online search"};
+ return null}
+const cityName=q=>q.split(",").map(x=>x.trim()).filter(x=>x&&!/^\d+$/.test(x)&&x.toLowerCase()!="india").pop()||q;
+$("mladd").onclick=async()=>{const msg=$("mlmsg"),q=$("mlp").value.trim();
+ if(!q){msg.textContent="Enter a place first.";return}
+ const t=$("mlt").value?new Date($("mlt").value):new Date();if(isNaN(t)){msg.textContent="Enter a valid date and time.";return}
+ const amt=+$("mla").value||0,rem0=MAX_WD-total(C);if(amt<0||amt>rem0){msg.textContent="Total withdrawals on this card cannot exceed ₹"+MAX_WD.toLocaleString("en-IN")+". Already withdrawn ₹"+total(C).toLocaleString("en-IN")+", so at most ₹"+rem0.toLocaleString("en-IN")+" can be added.";return}
+ msg.textContent="Finding place…";const d0=$("mlp").dataset;let g;
+ if(d0.ll&&q==d0.name){const a=d0.ll.split(",").map(Number);g={lat:a[0],lng:a[1],src:"device GPS"}}else g=await geocode(q);
+ if(!g){msg.textContent="Could not find that place. Add the city name, pick a suggestion, or type coordinates like 30.7195, 76.7462.";return}
+ if(g.lat<6||g.lat>37.5||g.lng<68||g.lng>98){msg.textContent="Only places in India are supported.";return}
+ let pt=toXY(g.lat,g.lng),moved="";
+ if(pt.x<0||pt.x>40||pt.y<0||pt.y>30){moveRegion(C,g.lat,g.lng,cityName(q));pt=toXY(g.lat,g.lng);moved=" · map moved to this area"}
+ const m=Math.max(0,Math.round((Date.now()-t.getTime())/60000));
+ C.tx.push({m,x:pt.x,y:pt.y,a:amt,t:"Sighting",label:q,lat:g.lat,lng:g.lng});
+ const nw=C.tx.reduce((a,b)=>b.m<a.m?b:a);C.last={x:nw.x,y:nw.y};
+ log("Location added: "+esc(q)+" at "+t.toLocaleTimeString()+" ("+g.src+")");
+ msg.textContent="Added: "+q+" · "+m+" min ago ("+g.src+")"+moved;
+ if(P)drawResult();else run()};
+$("mlgps").onclick=()=>{const msg=$("mlmsg");if(!navigator.geolocation){msg.textContent="GPS is not available in this browser.";return}
+ msg.textContent="Getting your live location…";
+ navigator.geolocation.getCurrentPosition(async p=>{const la=p.coords.latitude,lo=p.coords.longitude,ll=la.toFixed(5)+", "+lo.toFixed(5),i=$("mlp"),n=new Date();
+  i.value=ll;i.dataset.ll=ll;i.dataset.name=ll;$("mlt").value=new Date(n-n.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  msg.textContent="GPS captured: "+ll+" (accuracy ~"+Math.round(p.coords.accuracy)+" m). Press Add to case.";
+  try{const c=new AbortController();setTimeout(()=>c.abort(),5000);const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat="+la+"&lon="+lo,{signal:c.signal});const j=await r.json();
+   if(j.display_name){const nm=j.display_name.split(",").slice(0,5).join(",").trim();i.value=nm;i.dataset.name=nm}}catch(e){}
+ },e=>{msg.textContent="Could not get your location ("+(e.message||"permission denied")+"). Type the place instead."},{enableHighAccuracy:true,timeout:10000})};
+
+// ---------- export hotspots + forecast to Google Maps / My Maps / Earth (KML) ----------
+function buildKml(){
+ if(!P)return null;
+ const L=(x,y)=>{const l=toLL(x,y);return l.lng.toFixed(6)+","+l.lat.toFixed(6)+",0"};
+ const pt=(n,d,x,y)=>`<Placemark><name>${esc(n)}</name><description>${esc(d)}</description><Point><coordinates>${L(x,y)}</coordinates></Point></Placemark>`;
+ const circ=(x,y,r,n,d)=>{const a=[];for(let k=0;k<=24;k++){const t=k/24*2*Math.PI;a.push(L(x+Math.cos(t)*r,y+Math.sin(t)*r))}
+  return`<Placemark><name>${esc(n)}</name><description>${esc(d)}</description><styleUrl>#hot</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>${a.join(" ")}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`};
+ const cells={};C.hist.forEach(p=>{const k=Math.floor(p.x/2)+","+Math.floor(p.y/2),c=cells[k]||(cells[k]={x:0,y:0,w:0});c.x+=p.x*p.w;c.y+=p.y*p.w;c.w+=p.w});
+ const hs=Object.values(cells).map(c=>({x:c.x/c.w,y:c.y/c.w,w:c.w})).sort((a,b)=>b.w-a.w).slice(0,5);
+ const tx=C.tx.slice().sort((a,b)=>b.m-a.m);
+ return`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${esc(C.id)} - card loss prediction</name>
+<Style id="hot"><PolyStyle><color>660000ff</color></PolyStyle><LineStyle><color>ff0000ff</color><width>2</width></LineStyle></Style>
+<Style id="trail"><LineStyle><color>ff00e6ff</color><width>4</width></LineStyle></Style>
+<Folder><name>Hotspots (historical)</name>${hs.map((q,i)=>circ(q.x,q.y,1.3,"Hotspot #"+(i+1),"Past activity weight "+q.w.toFixed(1))).join("")}</Folder>
+<Folder><name>Predicted next locations</name>${P.top.map((r,i)=>pt("Predicted #"+(i+1)+" "+Math.round(r.p*100)+"% - "+r.a.name,r.a.addr,r.a.x,r.a.y)).join("")}</Folder>
+<Folder><name>Journey trail</name>${tx.length>1?`<Placemark><name>Path</name><styleUrl>#trail</styleUrl><LineString><coordinates>${tx.map(t=>L(t.x,t.y)).join(" ")}</coordinates></LineString></Placemark>`:""}${tx.map(t=>pt((t.label||addrOf(t).a.name)+" ("+t.t+")",Math.round(t.m)+" min ago, Rs "+t.a,t.x,t.y)).join("")}</Folder>
+${C.lost?pt("Card last seen",C.lost.name+(C.lostTime?" ~"+C.lostTime:""),C.lost.x,C.lost.y):""}</Document></kml>`}
+$("kml").onclick=()=>{const k=buildKml();if(!k){$("mlmsg").textContent="Run the pipeline first, then export.";return}
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([k],{type:"application/vnd.google-earth.kml+xml"}));a.download=C.id+"-hotspots.kml";a.click();log("KML exported for Google Maps ("+C.id+")")};
+$("run").onclick=run;drawMap();drawTx();drawQueue();
+</script><script>
+(()=>{
+const H=(a,b,c,d)=>{const r=Math.PI/180,p=(c-a)*r,l=(d-b)*r,q=Math.sin(p/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(l/2)**2;return 12742*Math.asin(Math.sqrt(q))};
+const DATA={
+"CY-2026-0412":{home:[30.7330,76.7720],cards:[
+{b:"SBI",form:"Debit",tech:["Chip/EMV","NFC/Contactless","Online"],no:"•••• 4417",ls:[95,"Sector 43 ISBT bus stand"],tx:[["TXN8841207731",420,1200,"Big Bazaar, Sector 35",30.7256,76.7570,"Success","Chip insert"],["TXN8841209954",75,5000,"SBI ATM, Sector 43 ISBT",30.7195,76.7462,"Success","ATM"],["TXN8841211302",48,10000,"HDFC ATM, Sector 17",30.7411,76.7847,"Success","ATM"],["TXN8841214470",22,10000,"ICICI ATM, Railway Station",30.6844,76.8217,"Success","ATM"]]},
+{b:"HDFC",form:"Credit",tech:["Magnetic stripe","Online"],no:"•••• 7702",ls:[2880,"Online checkout"],tx:[["TXN7720014410",2880,2350,"Amazon.in",null,null,"Success","Online"]]}]},
+"CY-2026-0418":{home:[30.7046,76.7179],cards:[
+{b:"HDFC",form:"Debit",tech:["Chip/EMV","Offline"],no:"•••• 9032",ls:[580,"Panchkula Sector 5"],tx:[["TXN5530021187",560,20000,"HDFC ATM, Panchkula Sector 5",30.6942,76.8606,"Success","ATM"]]},
+{b:"Axis",form:"Prepaid",tech:["NFC/Contactless","Online"],no:"•••• 3316",ls:[310,"Sector 17 Plaza"],tx:[["TXN6610098812",300,450,"Cafe, Sector 17",30.7411,76.7847,"Success","NFC tap"],["TXN6610099120",240,1800,"Reliance Fresh, Zirakpur",30.6425,76.8173,"Declined","NFC tap"]]}]},
+"CY-2026-0421":{home:[30.7648,76.7757],cards:[
+{b:"ICICI",form:"NFC Card",tech:["NFC/Contactless","Chip/EMV"],no:"•••• 1275",ls:[1260,"Sector 12 PGIMER"],tx:[]},
+{b:"PNB",form:"Virtual",tech:["Online"],no:"•••• 5590",ls:[700,"Online"],tx:[["TXN9901233145",700,999,"Streaming service",null,null,"Success","Online"]]}]}};
+const ACT={Debit:["Block card","Report lost/stolen","Temporary freeze","Replacement request"],Credit:["Block card","Report lost/stolen","Report unauthorized transaction","Replacement request"],Prepaid:["Freeze/block card","Report lost/stolen","Replacement request"],"NFC Card":["Disable NFC/contactless payments","Block card","Report lost/stolen","Replacement request"],Virtual:["Freeze/deactivate","Delete card","Generate a new card"]};
+ACT["ATM Card"]=ACT.Debit;
+const SLA=[[/freeze|disable|deactiv|delete|generate/i,"Instant"],[/unauthori/i,"Bank review in 24–48 hours; dispute resolved in up to 10 working days"],[/replace/i,"5–7 working days to deliver"],[/lost|block/i,"Within 15 minutes; confirmation SMS follows"]];
+const sla=a=>SLA.find(s=>s[0].test(a))[1];
+const GUIDE=[["Magnetic stripe","Swiped through the reader"],["Chip/EMV","Inserted into a POS machine"],["NFC/Contactless","Tapped on a compatible terminal"],["Online","Each payment authorised live by the bank"],["Offline","Can be approved without immediate bank verification"],["Virtual","Digital only, mainly for online payments"],["Prepaid","Money is loaded before spending"],["Debit","Deducted straight from your bank account"],["Credit","Uses a credit limit given by the bank"],["ATM card","Mainly for ATM withdrawals"]];
+window.CARDDATA=DATA;const S={legit:{},shots:{},reqs:[],state:{}},$=id=>document.getElementById(id),E=s=>String(s).replace(/[<>&"]/g,"");
+const BT=[["Public sector",["SBI","PNB","Bank of Baroda","Canara Bank","Union Bank of India","Bank of India","Indian Bank","Central Bank of India","Indian Overseas Bank","UCO Bank","Bank of Maharashtra","Punjab and Sind Bank"]],
+["Private sector",["HDFC","ICICI","Axis","Kotak Mahindra","IndusInd","Yes Bank","IDFC FIRST","Federal Bank","South Indian Bank","RBL Bank","Bandhan Bank","IDBI Bank","Karur Vysya Bank","City Union Bank","Tamilnad Mercantile","Dhanlaxmi Bank","CSB Bank","Nainital Bank","Jammu and Kashmir Bank","Karnataka Bank"]],
+["Small finance",["AU Small Finance","Equitas SFB","Ujjivan SFB","Jana SFB","Suryoday SFB","Utkarsh SFB","ESAF SFB","Capital SFB","North East SFB","Shivalik SFB"]],
+["Payments bank",["Paytm Payments Bank","Airtel Payments Bank","India Post Payments Bank","Fino Payments Bank","Jio Payments Bank","NSDL Payments Bank"]],
+["Co-operative",["Saraswat Co-operative","Cosmos Co-operative","TJSB Sahakari","Bharat Co-operative","Punjab State Co-operative"]],
+["Regional rural",["Punjab Gramin Bank","Sarva Haryana Gramin Bank","Himachal Pradesh Gramin Bank","Uttar Bihar Gramin Bank","Andhra Pradesh Grameena Bank","Baroda UP Bank","Karnataka Grameena Bank","Kerala Gramin Bank","Tamil Nadu Grama Bank","Madhya Pradesh Gramin Bank"]],
+["Other",["Other Indian bank (not listed)"]]];
+const CT=["Debit","Credit","Prepaid","NFC Card","Virtual","ATM Card"],TECH=["Magnetic stripe","Chip/EMV","NFC/Contactless","Online","Offline"];
+let PRE="";
+const typeOf=b=>{const t=BT.find(t=>t[1].includes(b));return t?t[0]:""};
+const banksOf=t=>t?BT.find(x=>x[0]==t)[1]:BT.flatMap(x=>x[1]);
+const opts=(L,sel,first)=>(first!=null?`<option value="">${first}</option>`:"")+L.map(x=>`<option ${x==sel?"selected":""}>${x}</option>`).join("");
+$("xcbt").innerHTML=opts(BT.map(t=>t[0]),"","All bank types");$("xcb").innerHTML=opts(banksOf(""),"","Select bank");
+$("xcty").innerHTML=opts(CT,"","Select card type");$("xct").innerHTML=opts(CT,"","All card types");
+$("xctech").innerHTML=TECH.map(t=>`<label class="chk"><input type="checkbox" value="${t}" style="width:auto"> ${t}</label>`).join("");
+function prefill(c,lu,lg){$("xcbt").value=typeOf(c.b);$("xcb").innerHTML=opts(banksOf($("xcbt").value),c.b,"Select bank");$("xcty").value=c.form;
+ document.querySelectorAll("#xctech input").forEach(x=>x.checked=c.tech.includes(x.value));$("xc4").value=(c.no.match(/\d{4}$/)||[""])[0];$("xci").value=lg||(lu?lu[0]:"");
+ if(lu){const n=new Date(Date.now()-lu[1]*60000);$("xcd").value=new Date(n-n.getTimezoneOffset()*60000).toISOString().slice(0,16);$("xcl").value=lu[3]}else{$("xcd").value="";$("xcl").value=c.ls[1]}}
+$("xcbt").onchange=()=>{const v=$("xcb").value;$("xcb").innerHTML=opts(banksOf($("xcbt").value),v,"Select bank")};
+const stale=()=>{const c=cur();if(!c||c.b!=$("xcb").value||c.form!=$("xcty").value){$("xc4").value="";$("xci").value=""}};
+$("xcb").onchange=()=>{const t=typeOf($("xcb").value);if(t)$("xcbt").value=t;stale()};$("xcty").onchange=stale;
+const T=m=>new Date(Date.now()-m*60000).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"}),inr=n=>"₹"+n.toLocaleString("en-IN");
+const D=()=>DATA[C&&C.id],cur=()=>{const v=$("xc").value;return v===""?undefined:D()&&D().cards[+v]},key=c=>c.b+c.no;
+const netOf=t=>{if(!/tap|online/i.test(t[7]))return null;let n=7;for(const ch of t[0])n=(n*31+ch.charCodeAt(0))>>>0;return{ip:[103,(n>>>8)&255,(n>>>16)&255,(n&255)||1].join("."),term:(/tap/i.test(t[7])?"POS-":"GW-")+(10000+n%90000)}};
+const sorted=c=>[...c.tx].sort((a,b)=>b[1]-a[1]);
+$("xguide").innerHTML=GUIDE.map(g=>`<tr><td><b>${g[0]}</b></td><td>${g[1]}</td></tr>`).join("");
+$("xcb").innerHTML=BANKS.map(b=>`<option>${b}</option>`).join("");
+function render(){const d=D();if(!d)return;const pt=$("xbt").value,pb=$("xb").value;
+ $("xbt").innerHTML=opts(BT.map(t=>t[0]),pt,"All bank types");const have=new Set(d.cards.map(c=>c.b));
+ $("xb").innerHTML='<option value="">All banks</option>'+banksOf($("xbt").value).map(b=>`<option value="${b}" ${b==pb?"selected":""}>${b}${have.has(b)?" (card on file)":""}</option>`).join("");
+ const tl=banksOf($("xbt").value),bk=$("xb").value,ct=$("xct").value,pc=$("xc").value,l=d.cards.map((c,i)=>[c,i]).filter(x=>(bk?x[0].b==bk:tl.includes(x[0].b))&&(!ct||x[0].form==ct));
+ $("xc").innerHTML=l.length?l.map(x=>`<option value="${x[1]}">${x[0].b} · ${x[0].form} ${x[0].no}</option>`).join(""):'<option value="">No card on file for this choice</option>';
+ if(l.length){if(pc!==""&&l.some(x=>String(x[1])===pc))$("xc").value=pc;else $("xc").value=l[0][1]}paint()}
+function paint(){const c=cur(),d=D();
+ if(!c){$("xlast").innerHTML=$("xtr").innerHTML='<tr><td style="color:var(--mu)">No card from this bank or type is on file. You can still submit a complaint.</td></tr>';["xinfo","xmap","xrad","xl","xrev","xact","xreq","xsp"].forEach(i=>$(i).innerHTML="");return}
+ const k=key(c),tx=sorted(c),lg=S.legit[k],li=tx.findIndex(t=>t[0]==lg),fl=li>=0?tx.slice(li+1):[];
+ const st=S.state[k];
+ $("xinfo").innerHTML=`<span class="pill">${c.b}</span><span class="pill">${c.form} card</span>${c.tech.map(t=>`<span class="pill a">${t}</span>`).join("")}${st?`<span class="pill b">${st}</span>`:""}`;
+ const lu=tx[tx.length-1],home=d.home;
+ const loc=t=>t&&t[4]!=null?`${E(t[3])} (${t[4].toFixed(4)}, ${t[5].toFixed(4)})`:t?E(t[3])+" · online, no physical location":"–";
+ const dist=lu&&lu[4]!=null?H(home[0],home[1],lu[4],lu[5]):null;
+ $("xlast").innerHTML=`<tr><td>Card last seen</td><td>${T(c.ls[0])} · ${E(c.ls[1])}</td></tr>`+(lu?`<tr><td>Last used</td><td>${T(lu[1])} (${lu[1]<60?lu[1]+" min":Math.round(lu[1]/60)+" h"} ago)</td></tr><tr><td>Last transaction</td><td>${lu[0]} · ${inr(lu[2])} · ${E(lu[7])} · ${lu[6]}</td></tr><tr><td>Last-use location</td><td>${loc(lu)}</td></tr><tr><td>Network IP / terminal</td><td>${(n=>n?n.ip+" · "+n.term:"Not applicable (ATM or chip use)")(netOf(lu))}</td></tr><tr><td>Distance from home</td><td>${dist==null?"Not available for online use":dist.toFixed(1)+" km from registered location"}</td></tr>`:'<tr><td>Last used</td><td>No transactions recorded on this card</td></tr>');
+ // movement + radius
+ const basis=(fl.length>1?fl:tx).filter(t=>t[4]!=null),sp=[];
+ for(let i=1;i<basis.length;i++){const dt=(basis[i-1][1]-basis[i][1])/60;if(dt>0)sp.push(H(basis[i-1][4],basis[i-1][5],basis[i][4],basis[i][5])/dt)}
+ sp.sort((a,b)=>a-b);const v=sp.length?sp[Math.floor(sp.length/2)]:null;
+ const mode=v==null?null:v<6?"W":v<25?"B":"V",ML={W:"on foot",B:"bike or scooter",V:"vehicle"};
+ const el=lu?lu[1]:0,rW=Math.max(.3,5*el/60),rV=Math.max(.3,40*el/60),rI=mode=="W"?rW:mode=="B"?Math.max(.3,20*el/60):rV;
+ $("xrad").innerHTML=lu&&lu[4]!=null?`Since the last use ${el} min ago the card could be up to <b>${rW.toFixed(1)} km</b> away on foot or <b>${rV.toFixed(1)} km</b> by vehicle.<br>`+(v==null?"Movement: only one location so far, so travel mode can't be judged yet.":`Movement: about <b>${v.toFixed(0)} km/h</b> between ${fl.length>1?"the flagged":"recorded"} transactions, which suggests <b>${ML[mode]}</b>.`):"No physical location available for this card.";
+ const pts=tx.filter(t=>t[4]!=null),svg=$("xmap");
+ if(lu&&lu[4]!=null){const c0=[lu[4],lu[5]],X=(la,lo)=>[(lo-c0[1])*111.32*Math.cos(c0[0]*Math.PI/180),(la-c0[0])*111.2];
+  const all=pts.map(t=>X(t[4],t[5])).concat([X(home[0],home[1])]),xs=all.map(q=>q[0]),ys=all.map(q=>q[1]),mx=(Math.min(...xs)+Math.max(...xs))/2,my=(Math.min(...ys)+Math.max(...ys))/2,w=Math.max(...xs)-Math.min(...xs),hh=Math.max(...ys)-Math.min(...ys),s=Math.min(620/Math.max(w,.4),290/Math.max(hh,.4)),CX=400,CY=215,P=(la,lo)=>{const q=X(la,lo);return[CX+(q[0]-mx)*s,CY-(q[1]-my)*s]},lp=P(lu[4],lu[5]);
+  const raw=Math.max(w,hh,.5)/4,mag=10**Math.floor(Math.log10(raw)),step=[1,2,5,10].map(m=>m*mag).find(v=>v>=raw),sp2=step*s;let g="";
+  for(let k=-60;k<=60;k++){const gx=lp[0]+k*sp2,gy=lp[1]+k*sp2;if(gx>0&&gx<800)g+=`<line x1="${gx}" y1="0" x2="${gx}" y2="460" stroke="#1f1f1f"/>`;if(gy>0&&gy<460)g+=`<line x1="0" y1="${gy}" x2="800" y2="${gy}" stroke="#1f1f1f"/>`}
+  const T2=(x,y,t,a="start",c="#fff",z=13)=>`<text x="${x}" y="${y}" fill="${c}" font-size="${z}" font-weight="700" text-anchor="${a}" stroke="#000" stroke-width="4" paint-order="stroke">${t}</text>`;
+  const ring=(r,da,c)=>`<circle cx="${lp[0]}" cy="${lp[1]}" r="${r*s}" fill="none" stroke="${c}" stroke-width="1.5" stroke-dasharray="${da}"/>`,hp=P(home[0],home[1]);
+  let o=g+`<circle cx="${lp[0]}" cy="${lp[1]}" r="${rI*s}" fill="#ffffff12"/>`+ring(rV,"3 6","#8a8a8a")+ring(rW,"8 5","#cfcfcf");
+  if(rW*s<215&&rW*s>20)o+=T2(lp[0],lp[1]-rW*s-6,"on foot ≤ "+rW.toFixed(1)+" km","middle","#ddd",12);
+  if(rV*s<215&&rV*s>20)o+=T2(lp[0],lp[1]-rV*s-6,"vehicle ≤ "+rV.toFixed(1)+" km","middle","#bbb",12);
+  o+=`<line x1="${hp[0]}" y1="${hp[1]}" x2="${lp[0]}" y2="${lp[1]}" stroke="#fff" stroke-dasharray="4 4"/>`+T2((hp[0]+lp[0])/2,(hp[1]+lp[1])/2-8,dist.toFixed(1)+" km from home","middle","#fff",12);
+  if(pts.length>1)o+=`<polyline fill="none" stroke="#9a9a9a" stroke-width="2" points="${pts.map(t=>P(t[4],t[5]).join(",")).join(" ")}"/>`;
+  pts.forEach((t,i)=>{const q=P(t[4],t[5]),f=fl.includes(t),last=t===lu,up=i%2==0;
+   o+=`<circle cx="${q[0]}" cy="${q[1]}" r="${last?11:8}" fill="${f?"#ff4d4d":"#fff"}" stroke="${last?"#fff":"#000"}" stroke-width="${last?3:1}"/>`+T2(q[0]+14,q[1]+(up?-8:18),(i+1)+". "+E(t[3].split(",")[0])+(last?" (last used)":""),"start",f?"#ffb3b3":"#fff")});
+  o+=`<rect x="${hp[0]-8}" y="${hp[1]-8}" width="16" height="16" fill="#000" stroke="#fff" stroke-width="3"/>`+T2(hp[0]-14,hp[1]+5,"Home (registered)","end","#fff",13)+
+  `<line x1="16" y1="440" x2="${16+sp2}" y2="440" stroke="#fff" stroke-width="3"/>`+T2(24+sp2,444,step+" km","start","#ccc",12);
+  svg.innerHTML=o;
+  $("xleg").innerHTML=`<span class="pill">● white = earlier use</span><span class="pill b">● red = bank review</span><span class="pill">▢ home</span><span class="pill a">shaded circle = most likely reach (${ML[mode]||"not judged"})</span><span class="pill a">grid square = ${step} km</span>`}
+ else{svg.innerHTML='<text x="400" y="230" fill="#999" font-size="16" text-anchor="middle">No physical location to map</text>';$("xleg").innerHTML=""}
+ // trail
+ $("xtr").innerHTML="<tr><th>#</th><th>Transaction ID</th><th>Date &amp; time</th><th>Amount</th><th>Merchant</th><th>Location</th><th>Status</th><th>Card use</th><th>IP / terminal</th><th>Review</th></tr>"+(tx.length?tx.map((t,i)=>`<tr><td>${i+1}</td><td>${t[0]}</td><td>${T(t[1])}</td><td>${inr(t[2])}</td><td>${E(t[3])}</td><td>${t[4]!=null?t[4].toFixed(3)+", "+t[5].toFixed(3):"Online"}</td><td>${t[6]}</td><td>${E(t[7])}</td><td>${(n=>n?n.ip+"<br><span style=\"color:var(--mu)\">"+n.term+"</span>":"–")(netOf(t))}</td><td>${t[0]==lg?'<span class="pill">Last legitimate</span>':fl.includes(t)?'<span class="pill b">Bank review</span>':li>=0?"Before":"–"}</td></tr>`).join(""):'<tr><td colspan="10">No transactions recorded.</td></tr>');
+ // legit
+ $("xl").innerHTML='<option value="">Not identified yet</option>'+tx.map(t=>`<option value="${t[0]}" ${t[0]==lg?"selected":""}>${t[0]} · ${E(t[3])} · ${inr(t[2])}</option>`).join("");
+ $("xsp").innerHTML=(S.shots[k]||[]).map(u=>`<img class="thumb" src="${u}" alt="Statement screenshot">`).join("");
+ $("xrev").innerHTML=li>=0?`<span class="pill b">${fl.length} transaction${fl.length==1?"":"s"} for bank review</span> after <b>${lg}</b>, total ${inr(fl.reduce((a,t)=>a+t[2],0))}. Supporting records and ${(S.shots[k]||[]).length} screenshot(s) go with the case.`:"Pick the last transaction you made, or upload a statement screenshot and pick it from the list. Everything after it will be marked for bank review.";
+ // actions
+ $("xact").innerHTML=!can2()?'<div style="color:var(--mu)">Only the bank or an investigator can block, freeze, delete or replace a card. Submit a complaint and they will act on it.</div>':(ACT[c.form]||ACT.Debit).map(a=>`<button class="${/lost|block|delete/i.test(a)?"r":"g"}" data-x="${a}">${a}</button>`).join("");
+ document.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{if(!can2())return;if(confirm(b.dataset.x+" for "+c.b+" "+c.no+"?"))addReq(c,b.dataset.x)});
+ reqs();
+ if(PRE!==C.id+k){PRE=C.id+k;prefill(c,lu,lg)}}
+const can2=()=>!!session&&(session.role=="inv"||session.role=="bank");
+function addReq(c,a,pend){const r={id:"REQ"+Math.floor(100000+Math.random()*900000),c:C.id,k:key(c),lbl:c.b+" "+c.no,a,at:new Date().toLocaleTimeString(),st:0,sla:sla(a),inst:sla(a)=="Instant",pending:!!pend,by:pend?"Complainant":(session?session.label:"")};
+ S.reqs.unshift(r);if(!pend)execReq(r);
+ if(typeof log=="function")log(a+(pend?" requested by complainant, awaiting bank/investigator":" done by "+r.by)+" for "+r.lbl+" ("+r.id+")");render();return r}
+function execReq(r){const a=r.a;
+ if(/block|lost|freeze|deactiv|delete/i.test(a))S.state[r.k]=/freeze|deactiv/i.test(a)?"Frozen":/delete/i.test(a)?"Deleted":"Blocked";
+ if(/disable nfc/i.test(a))S.state[r.k]="NFC disabled";
+ r.st=0;setTimeout(()=>{r.st=1;render()},3000);setTimeout(()=>{r.st=2;render()},8000)}
+const STL=r=>r.pending?"Sent to bank, awaiting action":r.inst?["Submitted","Received by bank","Done"][r.st]:/unauthori|replace/i.test(r.a)?["Submitted","Received by bank","Under review"][r.st]:["Submitted","Received by bank","Block confirmed"][r.st];
+function reqs(){const L=S.reqs.filter(r=>r.c==C.id);$("xreq").innerHTML=L.length?"<tr><th>Request</th><th>Card</th><th>Action</th><th>Status</th><th>Processing time</th></tr>"+L.map(r=>`<tr><td>${r.id}<br><span style="color:var(--mu)">${r.at}</span></td><td>${r.lbl}</td><td>${r.a}<br><span style="color:var(--mu)">by ${E(r.by||"-")}</span></td><td><span class="pill ${r.st==2&&!r.pending?"":"a"}">${STL(r)}</span>${r.pending&&can2()?`<br><button data-ap="${r.id}" style="padding:3px 8px;margin-top:4px">Approve block</button>`:""}</td><td>${r.sla}</td></tr>`).join(""):'<tr><td style="color:var(--mu)">No requests yet.</td></tr>';document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{const r=S.reqs.find(x=>x.id==b.dataset.ap);if(!r||!can2())return;r.pending=false;r.by=session.label;if(typeof log=="function")log("Block approved for "+r.lbl+" ("+r.id+")");execReq(r);render()})}
+const read=(f,k,cb)=>[...f.files].forEach(x=>{const r=new FileReader();r.onload=()=>{(S.shots[k]=S.shots[k]||[]).push(r.result);cb()};r.readAsDataURL(x)});
+$("xb").onchange=render;$("xc").onchange=paint;$("xbt").onchange=$("xct").onchange=render;
+$("xl").onchange=()=>{const c=cur();if(!c)return;S.legit[key(c)]=$("xl").value;if($("xl").value)$("xci").value=$("xl").value;paint()};
+$("xtap").onclick=()=>{const c=cur(),d=D(),m=$("xtapm");if(!c)return;
+ if(!c.tech.includes("NFC/Contactless")){m.textContent="This card has no NFC/contactless. Choose a card with the NFC tag.";return}
+ if(["Blocked","Frozen","Deleted","NFC disabled"].includes(S.state[key(c)])){m.textContent="Card is "+S.state[key(c)].toLowerCase()+", so the tap was declined.";return}
+ const lu=sorted(c).slice(-1)[0],b=lu&&lu[4]!=null?[lu[4],lu[5]]:d.home,id="TXN"+Math.floor(1e9+Math.random()*9e9),amt=50+Math.floor(Math.random()*19)*50;
+ c.tx.push([id,0,amt,"Tap terminal, Sector 17",b[0]+(Math.random()-.5)*.02,b[1]+(Math.random()-.5)*.02,"Success","NFC tap"]);
+ const n=netOf(c.tx[c.tx.length-1]);m.textContent="Tap recorded: "+id+" · IP "+n.ip+" · "+n.term;
+ if(typeof log=="function")log("Tap & pay on "+c.b+" "+c.no+" · IP "+n.ip);paint()};
+$("xs").onchange=()=>{const c=cur();if(c)read($("xs"),key(c),paint)};
+$("xci").oninput=()=>{$("xci").dataset.u=1};
+$("xsub").onclick=()=>{const d=D(),o=$("xres"),b=$("xcb").value,ty=$("xcty").value,n4=$("xc4").value.replace(/\D/g,"");
+ if(!b||!ty){o.textContent="Choose the bank and the card type to continue.";return}
+ const tech=[...document.querySelectorAll("#xctech input:checked")].map(x=>x.value);
+ let c=d.cards.find(x=>x.b==b&&x.form==ty&&(!n4||x.no.endsWith(n4)))||d.cards.find(x=>x.b==b&&x.form==ty),known=!!c;
+ if(!c)c={b,form:ty,tech,no:n4?"•••• "+n4:"(number not given)",tx:[],ls:[0,""]};
+ const tid=$("xci").value.trim(),k=key(c);if($("xcs").files.length)read($("xcs"),k,paint);
+ const u=sorted(c).slice(-1)[0],nw=u&&netOf(u),rq=addReq(c,ty=="Virtual"?"Freeze/deactivate":"Report lost/stolen",true),id="CMP-"+Math.floor(100000+Math.random()*900000);
+ o.innerHTML=`<span class="pill">Complaint ${id} submitted</span><br>${typeOf(b)?typeOf(b)+" · ":""}${b} · ${c.form} card ${E(c.no)}${known?"":" (not in your linked cards)"}<br>Technology: ${(tech.length?tech:c.tech).join(", ")||"not given"}<br>Last transaction ID: ${tid?E(tid):"Not provided. The bank traces it from card records"}<br>Last-use network: ${nw?nw.ip+" ("+nw.term+")":"none"}<br>Last use: ${E($("xcd").value||"unknown")} at ${E($("xcl").value||"unknown")}<br>Card block request ${rq.id}: <b>${STL(rq)}</b> (the bank or an investigator carries out the block) · Processing time: ${rq.sla}`;
+ if(typeof log=="function")log("Complaint "+id+" filed for "+b+" "+c.form+(tid?"":" without transaction ID"))};
+const oc=$("sel").onchange;$("sel").onchange=function(){oc&&oc.apply(this,arguments);$("xb").value="";render()};
+render();
+})();
+</script></body></html>
